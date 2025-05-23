@@ -1,0 +1,40 @@
+name: Black Code Formatting
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Black
+      run: pip install black
+    
+    - name: Check formatting
+      run: black --check .
+    
+    - name: Format code
+      if: github.event_name == 'push'
+      run: black .
+    
+    - name: Create Pull Request
+      if: github.event_name == 'push'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        commit-message: Apply Black formatting
+        title: Apply Black formatting
+        body: |
+          This PR applies Black formatting to the codebase.
+          Automated by GitHub Actions.
+        branch: black-formatting
+        base: main 
