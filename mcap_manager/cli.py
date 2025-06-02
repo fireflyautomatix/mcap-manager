@@ -66,13 +66,15 @@ def cli():
 )
 @click.option(
     "--include-topics-file",
-    type=click.Path(exists=True),
-    help="Path to a text file containing topics to include (one per line)",
+    type=click.Path(),
+    multiple=True,
+    help="Path to a text file containing topics to include (one per line). Can be specified multiple times.",
 )
 @click.option(
     "--exclude-topics-file",
-    type=click.Path(exists=True),
-    help="Path to a text file containing topics to exclude (one per line)",
+    type=click.Path(),
+    multiple=True,
+    help="Path to a text file containing topics to exclude (one per line). Can be specified multiple times.",
 )
 @click.option("--output", required=True, help="Output MCAP file path")
 @click.option("--debug", is_flag=True, help="Enable debug logging for skipped files")
@@ -83,8 +85,8 @@ def merge(
     time_range: Optional[int],
     include_topics: Optional[List[str]] = None,
     exclude_topics: Optional[List[str]] = None,
-    include_topics_file: Optional[str] = None,
-    exclude_topics_file: Optional[str] = None,
+    include_topics_file: Optional[List[str]] = None,
+    exclude_topics_file: Optional[List[str]] = None,
     output: str = None,
     debug: bool = False,
 ):
@@ -115,19 +117,42 @@ def merge(
     include_topics_list = parse_topics(include_topics)
     exclude_topics_list = parse_topics(exclude_topics)
 
+    # Handle multiple include-topics-file
     if include_topics_file:
-        try:
-            include_topics_list.extend(read_topics_from_file(include_topics_file))
-        except (FileNotFoundError, IOError) as e:
-            click.echo(f"Error: {str(e)}", err=True)
-            return
+        all_file_topics = []
+        for file_path in include_topics_file:
+            if not Path(file_path).exists():
+                click.echo("Error: Topic file does not exist", err=True)
+                sys.exit(1)
+            try:
+                topics = read_topics_from_file(file_path)
+                if not topics:
+                    continue
+                all_file_topics.extend(topics)
+            except (FileNotFoundError, IOError) as e:
+                click.echo("Error: Topic file does not exist", err=True)
+                sys.exit(1)
+        if not all_file_topics:
+            click.echo("No topics specified in topic files", err=True)
+            sys.exit(1)
+        include_topics_list.extend(all_file_topics)
 
+    # Handle multiple exclude-topics-file
     if exclude_topics_file:
-        try:
-            exclude_topics_list.extend(read_topics_from_file(exclude_topics_file))
-        except (FileNotFoundError, IOError) as e:
-            click.echo(f"Error: {str(e)}", err=True)
-            return
+        all_file_topics = []
+        for file_path in exclude_topics_file:
+            if not Path(file_path).exists():
+                click.echo("Error: Topic file does not exist", err=True)
+                sys.exit(1)
+            try:
+                topics = read_topics_from_file(file_path)
+                if not topics:
+                    continue
+                all_file_topics.extend(topics)
+            except (FileNotFoundError, IOError) as e:
+                click.echo("Error: Topic file does not exist", err=True)
+                sys.exit(1)
+        exclude_topics_list.extend(all_file_topics)
 
     results = query_mcap_files(
         root_dir=root_dir,
@@ -207,14 +232,14 @@ def info(
         try:
             include_topics_list.extend(read_topics_from_file(include_topics_file))
         except (FileNotFoundError, IOError) as e:
-            click.echo(f"Error: {str(e)}", err=True)
+            click.echo("Error: Topic file does not exist", err=True)
             return
 
     if exclude_topics_file:
         try:
             exclude_topics_list.extend(read_topics_from_file(exclude_topics_file))
         except (FileNotFoundError, IOError) as e:
-            click.echo(f"Error: {str(e)}", err=True)
+            click.echo("Error: Topic file does not exist", err=True)
             return
 
     mcap_files = find_mcap_files(root_dir)

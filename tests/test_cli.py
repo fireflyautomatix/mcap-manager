@@ -285,7 +285,7 @@ def test_cli_with_nonexistent_topics_file(tmp_path, runner):
     )
 
     assert result.exit_code != 0
-    assert "Path 'nonexistent.txt' does not exist" in result.output
+    assert "Error: Topic file does not exist" in result.output
 
 
 def test_cli_merge_with_time_range(tmp_path, runner):
