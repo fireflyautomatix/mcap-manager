@@ -83,7 +83,7 @@ def temp_mcap_dir(base_time):
         yield temp_dir
 
 
-def test_query_mcap_files(temp_mcap_dir, base_time):
+def test_query_mcap_files(sample_mcap_files, temp_dir, base_time):
     """Test querying MCAP files with time range and topic filters."""
     logger = setup_logging(debug=True)
 
@@ -93,14 +93,14 @@ def test_query_mcap_files(temp_mcap_dir, base_time):
     end_time = (base_dt + timedelta(seconds=1)).isoformat()
 
     # Test 1: Query all topics within time range
-    results = query_mcap_files(temp_mcap_dir, start_time, end_time, logger)
+    results = query_mcap_files(temp_dir, start_time, end_time, logger)
     assert len(results) == 2  # Should find test1.mcap and test2.mcap
     assert any("test1.mcap" in r.file_path for r in results)
     assert any("test2.mcap" in r.file_path for r in results)
 
     # Test 2: Query specific topic
     results = query_mcap_files(
-        temp_mcap_dir, start_time, end_time, logger, include_topics=["topic1"]
+        temp_dir, start_time, end_time, logger, include_topics=["topic1"]
     )
     assert len(results) == 1
     assert "test1.mcap" in results[0].file_path
@@ -108,26 +108,24 @@ def test_query_mcap_files(temp_mcap_dir, base_time):
 
     # Test 3: Exclude specific topic
     results = query_mcap_files(
-        temp_mcap_dir, start_time, end_time, logger, exclude_topics=["topic1"]
+        temp_dir, start_time, end_time, logger, exclude_topics=["topic1"]
     )
     assert len(results) == 1
     assert "test2.mcap" in results[0].file_path
     assert results[0].matching_topics == {"topic2"}
 
 
-def test_query_empty_directory():
+def test_query_empty_directory(temp_dir):
     """Test querying an empty directory."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        logger = setup_logging(debug=True)
-        results = query_mcap_files(
-            temp_dir, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", logger
-        )
-        assert len(results) == 0
+    logger = setup_logging(debug=True)
+    results = query_mcap_files(
+        temp_dir, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", logger
+    )
+    assert len(results) == 0
 
 
-def test_query_invalid_time_range():
+def test_query_invalid_time_range(temp_dir):
     """Test querying with invalid time range."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        logger = setup_logging(debug=True)
-        with pytest.raises(ValueError):
-            query_mcap_files(temp_dir, "invalid_time", "2024-01-02T00:00:00Z", logger)
+    logger = setup_logging(debug=True)
+    with pytest.raises(ValueError):
+        query_mcap_files(temp_dir, "invalid_time", "2024-01-02T00:00:00Z", logger)

@@ -42,25 +42,22 @@ def create_test_mcap(file_path: str, topic: str, timestamp: int, data: dict):
         writer.finish()
 
 
-def test_merge_with_multiple_topic_files(tmp_path, runner):
+def test_merge_with_multiple_topic_files(temp_dir, runner, base_time):
     """Test merge command with multiple topic files."""
     # Create test directories
-    root_dir = tmp_path / "root"
+    root_dir = temp_dir / "root"
     root_dir.mkdir()
-    output_dir = tmp_path / "output"
+    output_dir = temp_dir / "output"
     output_dir.mkdir()
 
     # Create multiple topic files
-    topics_file1 = tmp_path / "topics1.txt"
+    topics_file1 = temp_dir / "topics1.txt"
     topics_file1.write_text("topic1\ntopic2\n")
 
-    topics_file2 = tmp_path / "topics2.txt"
+    topics_file2 = temp_dir / "topics2.txt"
     topics_file2.write_text("topic3\ntopic4\n")
 
     # Create test MCAP files with various topics
-    base_time = int(
-        datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1e9
-    )
     create_test_mcap(root_dir / "test1.mcap", "topic1", base_time, {"value": "test1"})
     create_test_mcap(
         root_dir / "test2.mcap", "topic2", base_time + 1_000_000_000, {"value": "test2"}
@@ -82,9 +79,9 @@ def test_merge_with_multiple_topic_files(tmp_path, runner):
             "merge",
             str(root_dir),
             "--start",
-            "2024-01-01T00:00:00Z",
+            "2024-01-01T12:00:00Z",
             "--end",
-            "2024-01-02T00:00:00Z",
+            "2024-01-01T12:00:05Z",
             "--include-topics-file",
             str(topics_file1),
             "--include-topics-file",
@@ -98,25 +95,22 @@ def test_merge_with_multiple_topic_files(tmp_path, runner):
     assert "Found 4 matching MCAP files" in result.output
 
 
-def test_merge_with_overlapping_topic_files(tmp_path, runner):
+def test_merge_with_overlapping_topic_files(temp_dir, runner, base_time):
     """Test merge command with topic files that have overlapping topics."""
     # Create test directories
-    root_dir = tmp_path / "root"
+    root_dir = temp_dir / "root"
     root_dir.mkdir()
-    output_dir = tmp_path / "output"
+    output_dir = temp_dir / "output"
     output_dir.mkdir()
 
     # Create topic files with overlapping topics
-    topics_file1 = tmp_path / "topics1.txt"
+    topics_file1 = temp_dir / "topics1.txt"
     topics_file1.write_text("topic1\ntopic2\n")
 
-    topics_file2 = tmp_path / "topics2.txt"
+    topics_file2 = temp_dir / "topics2.txt"
     topics_file2.write_text("topic2\ntopic3\n")  # topic2 is in both files
 
     # Create test MCAP files
-    base_time = int(
-        datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1e9
-    )
     create_test_mcap(root_dir / "test1.mcap", "topic1", base_time, {"value": "test1"})
     create_test_mcap(
         root_dir / "test2.mcap", "topic2", base_time + 1_000_000_000, {"value": "test2"}
@@ -132,9 +126,9 @@ def test_merge_with_overlapping_topic_files(tmp_path, runner):
             "merge",
             str(root_dir),
             "--start",
-            "2024-01-01T00:00:00Z",
+            "2024-01-01T12:00:00Z",
             "--end",
-            "2024-01-02T00:00:00Z",
+            "2024-01-01T12:00:03Z",
             "--include-topics-file",
             str(topics_file1),
             "--include-topics-file",
@@ -148,22 +142,19 @@ def test_merge_with_overlapping_topic_files(tmp_path, runner):
     assert "Found 3 matching MCAP files" in result.output
 
 
-def test_merge_with_empty_topic_files(tmp_path, runner):
+def test_merge_with_empty_topic_files(temp_dir, runner, base_time):
     """Test merge command with empty topic files."""
     # Create test directories
-    root_dir = tmp_path / "root"
+    root_dir = temp_dir / "root"
     root_dir.mkdir()
-    output_dir = tmp_path / "output"
+    output_dir = temp_dir / "output"
     output_dir.mkdir()
 
     # Create empty topic file
-    topics_file = tmp_path / "topics.txt"
+    topics_file = temp_dir / "topics.txt"
     topics_file.write_text("")
 
     # Create test MCAP files
-    base_time = int(
-        datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1e9
-    )
     create_test_mcap(root_dir / "test1.mcap", "topic1", base_time, {"value": "test1"})
 
     # Run merge command with empty topic file
@@ -173,9 +164,9 @@ def test_merge_with_empty_topic_files(tmp_path, runner):
             "merge",
             str(root_dir),
             "--start",
-            "2024-01-01T00:00:00Z",
+            "2024-01-01T12:00:00Z",
             "--end",
-            "2024-01-02T00:00:00Z",
+            "2024-01-01T12:00:01Z",
             "--include-topics-file",
             str(topics_file),
             "--output",
@@ -187,18 +178,15 @@ def test_merge_with_empty_topic_files(tmp_path, runner):
     assert "No topics specified in topic files" in result.output
 
 
-def test_merge_with_nonexistent_topic_file(tmp_path, runner):
+def test_merge_with_nonexistent_topic_file(temp_dir, runner, base_time):
     """Test merge command with a nonexistent topic file."""
     # Create test directories
-    root_dir = tmp_path / "root"
+    root_dir = temp_dir / "root"
     root_dir.mkdir()
-    output_dir = tmp_path / "output"
+    output_dir = temp_dir / "output"
     output_dir.mkdir()
 
     # Create test MCAP files
-    base_time = int(
-        datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1e9
-    )
     create_test_mcap(root_dir / "test1.mcap", "topic1", base_time, {"value": "test1"})
 
     # Run merge command with nonexistent topic file
@@ -208,11 +196,11 @@ def test_merge_with_nonexistent_topic_file(tmp_path, runner):
             "merge",
             str(root_dir),
             "--start",
-            "2024-01-01T00:00:00Z",
+            "2024-01-01T12:00:00Z",
             "--end",
-            "2024-01-02T00:00:00Z",
+            "2024-01-01T12:00:01Z",
             "--include-topics-file",
-            str(tmp_path / "nonexistent.txt"),
+            str(temp_dir / "nonexistent.txt"),
             "--output",
             str(output_dir / "merged.mcap"),
         ],
