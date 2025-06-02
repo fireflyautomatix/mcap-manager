@@ -16,14 +16,10 @@ uv pip install -e .
 ```
 
 ### From Git
-
 ```bash
-# Create and activate a virtual environment with uv
-uv venv
-source .venv/bin/activate
-
 # Install directly from git
 uv pip install git+https://github.com/fireflyautomatix/mcap-manager.git
+```
 
 ### Getting Help
 

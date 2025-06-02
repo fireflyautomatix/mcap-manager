@@ -1,9 +1,9 @@
 [project]
 name = "mcap_manager"
-version = "0.1.0"
+version = "0.2.0"
 description = "A CLI tool for querying and managing MCAP files"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Vinny Ruia", email = "vinny.ruia@fireflyautomatix.com"}
 ]
 dependencies = [
     "mcap>=0.3.0",
@@ -24,4 +24,9 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"] 
+python_files = ["test_*.py"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+] 
