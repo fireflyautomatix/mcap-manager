@@ -62,12 +62,16 @@ def sample_mcap_files(temp_dir, base_time):
         "file2": temp_dir / "test2.mcap",
         "file3": temp_dir / "test3.mcap",
     }
-    
+
     # Create test files with different timestamps
     create_test_mcap(files["file1"], "topic1", base_time, {"value": "test1"})
-    create_test_mcap(files["file2"], "topic2", base_time + 1_000_000_000, {"value": "test2"})
-    create_test_mcap(files["file3"], "topic3", base_time + 2_000_000_000, {"value": "test3"})
-    
+    create_test_mcap(
+        files["file2"], "topic2", base_time + 1_000_000_000, {"value": "test2"}
+    )
+    create_test_mcap(
+        files["file3"], "topic3", base_time + 2_000_000_000, {"value": "test3"}
+    )
+
     return files
 
 
@@ -76,4 +80,4 @@ def topics_file(temp_dir):
     """Create a topics file for testing."""
     topics_file = temp_dir / "topics.txt"
     topics_file.write_text("topic1\ntopic2\n")
-    return topics_file 
+    return topics_file

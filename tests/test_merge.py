@@ -16,20 +16,28 @@ def test_merge_mcap_files(sample_mcap_files, temp_dir):
 
     # Test merging with include filter
     messages1 = list(
-        process_mcap_file(str(sample_mcap_files["file1"]), include_topics={"topic1"}, logger=logger)
+        process_mcap_file(
+            str(sample_mcap_files["file1"]), include_topics={"topic1"}, logger=logger
+        )
     )
     messages2 = list(
-        process_mcap_file(str(sample_mcap_files["file2"]), include_topics={"topic1"}, logger=logger)
+        process_mcap_file(
+            str(sample_mcap_files["file2"]), include_topics={"topic1"}, logger=logger
+        )
     )
     assert len(messages1) == 1
     assert len(messages2) == 0
 
     # Test merging with exclude filter
     messages1 = list(
-        process_mcap_file(str(sample_mcap_files["file1"]), exclude_topics={"topic1"}, logger=logger)
+        process_mcap_file(
+            str(sample_mcap_files["file1"]), exclude_topics={"topic1"}, logger=logger
+        )
     )
     messages2 = list(
-        process_mcap_file(str(sample_mcap_files["file2"]), exclude_topics={"topic1"}, logger=logger)
+        process_mcap_file(
+            str(sample_mcap_files["file2"]), exclude_topics={"topic1"}, logger=logger
+        )
     )
     assert len(messages1) == 0
     assert len(messages2) == 1
