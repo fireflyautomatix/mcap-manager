@@ -1,7 +1,7 @@
 import click
 from typing import List, Optional
 from .query import query_mcap_files, QueryResult
-from .utils import format_timestamp
+from .utils import format_timestamp, parse_iso_time
 from .mcap_utils import (
     setup_logging,
     parse_topics,
@@ -78,6 +78,12 @@ def cli():
 )
 @click.option("--output", required=True, help="Output MCAP file path")
 @click.option("--debug", is_flag=True, help="Enable debug logging for skipped files")
+@click.option(
+    "--latched-transient-output-msgs",
+    type=int,
+    default=1,
+    help="Number of transient messages to include before the start timestamp (default: 1)",
+)
 def merge(
     root_dir: Optional[str],
     start: Optional[str],
@@ -89,6 +95,7 @@ def merge(
     exclude_topics_file: Optional[List[str]] = None,
     output: str = None,
     debug: bool = False,
+    latched_transient_output_msgs: int = 1,
 ):
     """Merge matching MCAP files into a single output file."""
     logger = setup_logging(debug)
@@ -107,6 +114,10 @@ def merge(
             raise click.UsageError(
                 "Either --time-range or both --start and --end must be provided"
             )
+
+    # Validate latched-transient-output-msgs
+    if latched_transient_output_msgs < 1:
+        raise click.UsageError("--latched-transient-output-msgs must be at least 1")
 
     # Use configured root_dir if not provided
     if root_dir is None:
@@ -154,6 +165,12 @@ def merge(
                 sys.exit(1)
         exclude_topics_list.extend(all_file_topics)
 
+    # Parse start time as nanoseconds for transient message timestamp adjustment
+    start_ns = None
+    if start is not None:
+        start_ns = parse_iso_time(start)
+
+    # Get main results
     results = query_mcap_files(
         root_dir=root_dir,
         start_time=start,
@@ -162,6 +179,24 @@ def merge(
         exclude_topics=exclude_topics_list,
         logger=logger,
     )
+
+    # Get transient results if requested
+    transient_dir = Path(root_dir) / "transient_output"
+    if latched_transient_output_msgs > 0:
+        if not transient_dir.exists():
+            click.echo(
+                "No transient messages found (transient_output directory does not exist)"
+            )
+        else:
+            transient_results = query_mcap_files(
+                root_dir=str(transient_dir),
+                start_time=start,
+                end_time=end,
+                include_topics=include_topics_list,
+                exclude_topics=exclude_topics_list,
+                logger=logger,
+            )
+            results.extend(transient_results)
 
     display_results_summary(results, show_topics=False)
     if not results:
@@ -178,6 +213,8 @@ def merge(
         include_topics=include_topics_list,
         exclude_topics=exclude_topics_list,
         logger=logger,
+        latched_transient_output_msgs=latched_transient_output_msgs,
+        start_ns=start_ns,
     )
 
     elapsed_time = time.time() - start_time

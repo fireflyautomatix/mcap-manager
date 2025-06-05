@@ -76,6 +76,41 @@ def sample_mcap_files(temp_dir, base_time):
 
 
 @pytest.fixture
+def transient_mcap_files(temp_dir, base_time):
+    """Create a set of transient MCAP files for testing."""
+    transient_dir = temp_dir / "transient_outputs"
+    transient_dir.mkdir()
+
+    files = {
+        "transient1": transient_dir / "transient1.mcap",
+        "transient2": transient_dir / "transient2.mcap",
+        "transient3": transient_dir / "transient3.mcap",
+    }
+
+    # Create transient files with different timestamps
+    # One before the base time
+    create_test_mcap(
+        files["transient1"],
+        "transient_topic1",
+        base_time - 2_000_000_000,
+        {"value": "transient1"},
+    )
+    # One at base time
+    create_test_mcap(
+        files["transient2"], "transient_topic2", base_time, {"value": "transient2"}
+    )
+    # One after base time
+    create_test_mcap(
+        files["transient3"],
+        "transient_topic3",
+        base_time + 1_000_000_000,
+        {"value": "transient3"},
+    )
+
+    return files
+
+
+@pytest.fixture
 def topics_file(temp_dir):
     """Create a topics file for testing."""
     topics_file = temp_dir / "topics.txt"

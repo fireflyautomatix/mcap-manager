@@ -52,6 +52,7 @@ def query_mcap_files(
             matching_topics = set()
             file_start_time = None
             file_end_time = None
+            is_transient = "transient_outputs" in str(file_path)
 
             logger.debug(f"Processing file: {file_path}")
             for topic, timestamp in process_mcap_file(
@@ -60,7 +61,15 @@ def query_mcap_files(
                 exclude_topics=exclude_set,
                 logger=logger,
             ):
-                if start_ns <= timestamp <= end_ns:
+                # For transient messages, include messages before start time
+                if is_transient and timestamp < start_ns:
+                    matching_topics.add(topic)
+                    if file_start_time is None or timestamp < file_start_time:
+                        file_start_time = timestamp
+                    if file_end_time is None or timestamp > file_end_time:
+                        file_end_time = timestamp
+                # For regular messages, only include messages within time range
+                elif start_ns <= timestamp <= end_ns:
                     matching_topics.add(topic)
                     if file_start_time is None or timestamp < file_start_time:
                         file_start_time = timestamp

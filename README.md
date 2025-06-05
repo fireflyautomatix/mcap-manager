@@ -66,6 +66,7 @@ mcap_manager merge \
   --include-topics-file topics.txt \
   --exclude-topics-file excluded_topics.txt \
   --output ./merged_output.mcap \
+  --latched-transient-output-msgs 1 \
   --debug
 ```
 
@@ -80,6 +81,7 @@ mcap_manager merge \
   --include-topics-file topics.txt \
   --exclude-topics-file excluded_topics.txt \
   --output ./merged_output.mcap \
+  --latched-transient-output-msgs 1 \
   --debug
 ```
 
@@ -94,7 +96,29 @@ mcap_manager merge \
 - `--include-topics-file`: Path to a text file containing topics to include (one per line)
 - `--exclude-topics-file`: Path to a text file containing topics to exclude (one per line)
 - `--output`: Path to the output MCAP file
+- `--latched-transient-output-msgs`: Number of transient messages to include before the start timestamp (default: 1)
 - `--debug`: Enable debug logging for skipped files
+
+#### Transient Messages
+
+The `--latched-transient-output-msgs` option allows you to include transient messages from a `transient_outputs` subfolder in your output. These messages are handled as follows:
+
+1. Messages in the `transient_outputs` subfolder are treated as transient messages
+2. For each regular message in the output:
+   - The last N transient messages before that message's timestamp are included
+   - N is specified by `--latched-transient-output-msgs` (default: 1)
+3. Transient messages are included with the same timestamp as the regular message they're attached to
+4. Topic filtering applies to both regular and transient messages
+
+Example directory structure:
+```
+bags/
+  ├── regular1.mcap
+  ├── regular2.mcap
+  └── transient_outputs/
+      ├── transient1.mcap
+      └── transient2.mcap
+```
 
 #### Topics File Format
 
