@@ -16,6 +16,9 @@ def find_mcap_files(root_dir: str) -> List[str]:
 
 def parse_iso_time(time_str: str) -> int:
     """Convert ISO 8601 time string to nanoseconds since epoch."""
+    # Replace 'Z' with '+00:00' for proper UTC timezone handling
+    if time_str.endswith("Z"):
+        time_str = time_str[:-1] + "+00:00"
     dt = parser.parse(time_str)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
