@@ -34,7 +34,7 @@ def query_mcap_files(
     include_set = set(include_topics) if include_topics else None
     exclude_set = set(exclude_topics) if exclude_topics else None
 
-    logger.debug(f"Query parameters:")
+    logger.debug("Query parameters:")
     logger.debug(f"  Start time: {start_time} ({start_ns})")
     logger.debug(f"  End time: {end_time} ({end_ns})")
     logger.debug(f"  Include topics: {include_set}")
@@ -54,11 +54,14 @@ def query_mcap_files(
             file_end_time = None
             is_transient = "transient_outputs" in str(file_path)
 
-            file_start_ns, file_end_ns = get_timespan_ns(file_path)
-            if file_start_ns > end_ns or file_end_ns < start_ns:
-                logger.debug(f"  File outside time range: {file_path}")
-                pbar.update(1)
-                continue
+            try:
+                file_start_ns, file_end_ns = get_timespan_ns(file_path)
+                if file_start_ns > end_ns or file_end_ns < start_ns:
+                    logger.debug(f"File outside time range: {file_path} ({file_start_ns} - {file_end_ns})")
+                    pbar.update(1)
+                    continue
+            except Exception as e:
+                logger.warn(f"Error getting timespan of file {file_path}: {e}")
 
             logger.debug(f"Processing file: {file_path}")
             for topic, timestamp in process_mcap_file(
