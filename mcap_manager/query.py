@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Optional, Set
-from .mcap_utils import setup_logging, process_mcap_file, find_mcap_files, get_timespan_ns
+from .mcap_utils import (
+    setup_logging,
+    process_mcap_file,
+    find_mcap_files,
+    get_timespan_ns,
+)
 from .utils import parse_iso_time
 import time
 import logging
@@ -57,7 +62,9 @@ def query_mcap_files(
             try:
                 file_start_ns, file_end_ns = get_timespan_ns(file_path)
                 if file_start_ns > end_ns or file_end_ns < start_ns:
-                    logger.debug(f"File outside time range: {file_path} ({file_start_ns} - {file_end_ns})")
+                    logger.debug(
+                        f"File outside time range: {file_path} ({file_start_ns} - {file_end_ns})"
+                    )
                     pbar.update(1)
                     continue
             except Exception as e:
