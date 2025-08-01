@@ -31,6 +31,13 @@ def parse_topics(values: Optional[List[str]]) -> List[str]:
         topics.extend([v.strip() for v in val.split(",") if v.strip()])
     return topics
 
+def get_timespan_ns(file_path: str) -> Tuple[int, int]:
+    """Get the timespan of an MCAP file."""
+    with open(file_path, "rb") as f:
+        reader = make_reader(f)
+        summary = reader.get_summary()
+        return summary.statistics.message_start_time, summary.statistics.message_end_time
+
 
 def process_mcap_file(
     file_path: str,
